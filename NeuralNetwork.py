@@ -1,6 +1,7 @@
 import numpy as np
 import random
 import math
+import datetime
 
 
 class NeuralNetwork:
@@ -18,24 +19,6 @@ class NeuralNetwork:
                 self.weights[i, j] = self.weights_[j, i] = random.random()
 
         self.normalize_weights()
-
-    def direct_conversion(self, x):
-        y = np.zeros(self.p, dtype=np.float64)
-
-        for j in range(0, self.p):
-            for i in range(0, self.n):
-                y[j] += self.weights[i, j] * x[i]
-
-        return y
-
-    def inverse_conversion(self, y):
-        x = np.zeros(self.n, dtype=np.float64)
-
-        for i in range(0, self.n):
-            for j in range(0, self.p):
-                x[i] += self.weights_[j, i] * y[j]
-
-        return x
 
     def get_error(self, x, x_):
         e = 0
@@ -95,11 +78,12 @@ class NeuralNetwork:
         while e >= 0.01:
             e = 0
             iteration += 1
+            start_time = datetime.datetime.now()
 
             for l in range(0, self.p):
                 ii = inputs[l]
-                oi = self.direct_conversion(ii)
-                ii_ = self.inverse_conversion(oi)
+                oi = np.dot(ii, self.weights)
+                ii_ = np.dot(oi, self.weights_)
 
                 alpha = self.compute_adaptive_step(ii, self.n)
                 alpha_ = self.compute_adaptive_step(oi, self.p)
@@ -114,12 +98,14 @@ class NeuralNetwork:
 
             for l in range(0, self.p):
                 ii = inputs[l]
-                oi = self.direct_conversion(ii)
-                ii_ = self.inverse_conversion(oi)
+                oi = np.dot(ii, self.weights)
+                ii_ = np.dot(oi, self.weights_)
 
                 e += self.get_error(ii, ii_)
 
-            print iteration, 'iteration, error =', e
+            delta_time = datetime.datetime.now() - start_time
+
+            print iteration, 'iteration, error =', e, 'took', delta_time.microseconds, 'mcs'
 
     def process(self):
         self.train(self.images)
