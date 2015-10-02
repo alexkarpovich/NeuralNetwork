@@ -6,6 +6,11 @@ import datetime
 
 class NeuralNetwork:
     def __init__(self, images, p, n):
+        """
+        :param images: array of input images
+        :param p: int count of output images
+        :param n: int count of values in a image
+        """
         self.images = images
         self.p = p
         self.n = n
@@ -14,13 +19,19 @@ class NeuralNetwork:
         self.fill_weights()
 
     def fill_weights(self):
+        """ This method fills randomly matrices of weights with value [-1, 1] """
         for i in range(0, self.n):
             for j in range(0, self.p):
-                self.weights[i, j] = self.weights_[j, i] = random.random()
+                self.weights[i, j] = self.weights_[j, i] = random.uniform(-1, 1)
 
         self.normalize_weights()
 
     def get_error(self, x, x_):
+        """ This method calculate error between recovered and source images
+        :param x: array - source image
+        :param x_: array - recovered image
+        :return: float - error between values of recovered and source images
+        """
         e = 0
 
         for i in range(0, self.n):
@@ -29,6 +40,7 @@ class NeuralNetwork:
         return e / 2
 
     def normalize_direct_weights(self):
+        """ This method normalize weights of first layer """
         for i in range(0, self.n):
             s = 0
             for j in range(0, self.p):
@@ -40,6 +52,7 @@ class NeuralNetwork:
                 self.weights[i, j] /= s
 
     def normalize_inverse_weights(self):
+        """ This method normalize weights of second layer """
         for j in range(0, self.p):
             s = 0
             for i in range(0, self.n):
@@ -51,6 +64,7 @@ class NeuralNetwork:
                 self.weights_[j, i] /= s
 
     def normalize_weights(self):
+        """ This method normalize weights of both layers """
         self.normalize_direct_weights()
         self.normalize_inverse_weights()
 
@@ -70,7 +84,7 @@ class NeuralNetwork:
 
         return 1. / s
 
-    def train(self, inputs):
+    def training(self, inputs):
         e = 10
         iteration = 0
         gamma = np.zeros(self.p, dtype=np.float64)
@@ -105,9 +119,9 @@ class NeuralNetwork:
 
             delta_time = datetime.datetime.now() - start_time
 
-            print iteration, 'iteration, error =', e, 'took', delta_time.microseconds, 'mcs'
+            print iteration, 'iteration, error =', e, 'took', delta_time.microseconds / 1000., 'mcs'
 
     def process(self):
-        self.train(self.images)
+        self.training(self.images)
 
         exit(0)
