@@ -24,8 +24,6 @@ class NeuralNetwork:
             for j in range(0, self.p):
                 self.weights[i, j] = self.weights_[j, i] = random.uniform(-1, 1)
 
-        self.normalize_weights()
-
     def get_error(self, x, x_):
         """ This method calculate error between recovered and source images
         :param x: array - source image
@@ -69,6 +67,14 @@ class NeuralNetwork:
         self.normalize_inverse_weights()
 
     def compute_weights(self, ii, oi, ii_, gamma, alpha, alpha_):
+        """ This method corrects weights for first and second layers
+        :param ii: array input image
+        :param oi: array output image
+        :param ii_: array recovered image
+        :param gamma: array of gamma values
+        :param alpha: float alpha for fist layer
+        :param alpha_: float alpha for second layer
+        """
         for i in range(0, self.n):
             for j in range(0, self.p):
                 self.weights[i, j] -= alpha * gamma[j] * ii[i]
@@ -77,6 +83,11 @@ class NeuralNetwork:
         self.normalize_weights()
 
     def compute_adaptive_step(self, x, size):
+        """ Compute adaptive step for passed layer
+        :param x: array image of first of second layer
+        :param size: int array size
+        :return: float adaptive step
+        """
         s = 0
 
         for i in range(0, size):
@@ -84,7 +95,22 @@ class NeuralNetwork:
 
         return 1. / s
 
-    def training(self, inputs):
+    def compute_gamma(self, gamma, ii, ii_):
+        """ This method calculate gamma
+        :param gamma: array for updating
+        :param ii: array input image
+        :param ii_: array recovered image
+        :return: gamma
+        """
+        for j in range(0, self.p):
+            gamma[j] = 0
+            for i in range(0, self.n):
+                gamma[j] += (ii_[i] - ii[i]) * self.weights_[j, i]
+
+        return gamma
+
+    def training(self):
+        """ This method starts training net (calculate weights) using Backpropagation algorithm """
         e = 10
         iteration = 0
         gamma = np.zeros(self.p, dtype=np.float64)
@@ -95,23 +121,18 @@ class NeuralNetwork:
             start_time = datetime.datetime.now()
 
             for l in range(0, self.p):
-                ii = inputs[l]
+                ii = self.images[l]
                 oi = np.dot(ii, self.weights)
                 ii_ = np.dot(oi, self.weights_)
 
                 alpha = self.compute_adaptive_step(ii, self.n)
                 alpha_ = self.compute_adaptive_step(oi, self.p)
-
-                for j in range(0, self.p):
-                    gamma[j] = 0
-
-                    for i in range(0, self.n):
-                        gamma[j] += (ii_[i] - ii[i]) * self.weights_[j, i]
+                gamma = self.compute_gamma(gamma, ii, ii_)
 
                 self.compute_weights(ii, oi, ii_, gamma, alpha, alpha_)
 
             for l in range(0, self.p):
-                ii = inputs[l]
+                ii = self.images[l]
                 oi = np.dot(ii, self.weights)
                 ii_ = np.dot(oi, self.weights_)
 
@@ -119,7 +140,7 @@ class NeuralNetwork:
 
             delta_time = datetime.datetime.now() - start_time
 
-            print iteration, 'iteration, error =', e, 'took', delta_time.microseconds / 1000., 'mcs'
+            print iteration, 'iteration, error =', e, 'took', delta_time.microseconds / 1000., 'ms'
 
     def process(self):
         self.training(self.images)

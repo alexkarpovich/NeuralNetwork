@@ -48,4 +48,4 @@ class Compressor:
                                                   y_pos: y_pos + self.wnd_height]))
 
         network = NeuralNetwork(inputs, self.p, self.image_size)
-        network.process()
+        network.training()
