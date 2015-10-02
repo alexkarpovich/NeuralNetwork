@@ -131,6 +131,8 @@ class NeuralNetwork:
 
                 self.compute_weights(ii, oi, ii_, gamma, alpha, alpha_)
 
+            print self.weights[10, 10], self.weights_[10, 10]
+
             for l in range(0, self.p):
                 ii = self.images[l]
                 oi = np.dot(ii, self.weights)
