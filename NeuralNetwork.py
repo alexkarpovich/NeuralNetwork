@@ -5,7 +5,7 @@ import datetime
 
 
 class NeuralNetwork:
-    def __init__(self, images, p, n):
+    def __init__(self, images, p, n, min_error):
         """
         :param images: array of input images
         :param p: int count of output images
@@ -14,15 +14,26 @@ class NeuralNetwork:
         self.images = images
         self.p = p
         self.n = n
+        self.min_error = min_error
         self.weights = np.zeros((self.n, self.p), dtype=np.float64)
         self.weights_ = np.zeros((self.p, self.n), dtype=np.float64)
         self.fill_weights()
 
     def fill_weights(self):
         """ This method fills randomly matrices of weights with value [-1, 1] """
-        for i in range(0, self.n):
-            for j in range(0, self.p):
+        for i in xrange(self.n):
+            for j in xrange(self.p):
                 self.weights[i, j] = self.weights_[j, i] = random.uniform(-1, 1)
+
+    def load_weights(self):
+        """ This method loads arrays of weights from config files """
+        self.weights = np.loadtxt('config/direct_weights.txt')
+        self.weights_ = np.loadtxt('config/inverse_weights.txt')
+
+    def save_weights(self):
+        """ This method saves arrays of weights to config files """
+        np.savetxt('config/direct_weights.txt', self.weights)
+        np.savetxt('config/inverse_weights.txt', self.weights_)
 
     def get_error(self, x, x_):
         """ This method calculate error between recovered and source images
@@ -32,33 +43,33 @@ class NeuralNetwork:
         """
         e = 0
 
-        for i in range(0, self.n):
+        for i in xrange(self.n):
             e += pow(x_[i] - x[i], 2)
 
         return e / 2
 
     def normalize_direct_weights(self):
         """ This method normalize weights of first layer """
-        for i in range(0, self.n):
+        for i in xrange(self.n):
             s = 0
-            for j in range(0, self.p):
+            for j in xrange(self.p):
                 s += self.weights[i, j]**2
 
             s = math.sqrt(s)
 
-            for j in range(0, self.p):
+            for j in xrange(self.p):
                 self.weights[i, j] /= s
 
     def normalize_inverse_weights(self):
         """ This method normalize weights of second layer """
-        for j in range(0, self.p):
+        for j in xrange(self.p):
             s = 0
-            for i in range(0, self.n):
+            for i in xrange(self.n):
                 s += self.weights_[j, i]**2
 
             s = math.sqrt(s)
 
-            for i in range(0, self.n):
+            for i in xrange(self.n):
                 self.weights_[j, i] /= s
 
     def normalize_weights(self):
@@ -75,8 +86,8 @@ class NeuralNetwork:
         :param alpha: float alpha for fist layer
         :param alpha_: float alpha for second layer
         """
-        for i in range(0, self.n):
-            for j in range(0, self.p):
+        for i in xrange(self.n):
+            for j in xrange(self.p):
                 self.weights[i, j] -= alpha * gamma[j] * ii[i]
                 self.weights_[j, i] -= alpha_ * oi[j] * (ii_[i] - ii[i])
 
@@ -90,7 +101,7 @@ class NeuralNetwork:
         """
         s = 0
 
-        for i in range(0, size):
+        for i in xrange(size):
             s += x[i]**2
 
         return 1. / s
@@ -102,26 +113,26 @@ class NeuralNetwork:
         :param ii_: array recovered image
         :return: gamma
         """
-        for j in range(0, self.p):
+        for j in xrange(self.p):
             gamma[j] = 0
-            for i in range(0, self.n):
+            for i in xrange(self.n):
                 gamma[j] += (ii_[i] - ii[i]) * self.weights_[j, i]
 
         return gamma
 
     def training(self):
         """ This method starts training net (calculate weights) using Backpropagation algorithm """
-        e = 10
+        e = self.min_error + 1
+        exp_min = 10000000
         iteration = 0
         gamma = np.zeros(self.p, dtype=np.float64)
 
-        while e >= 0.01:
+        while e >= self.min_error:
             e = 0
             iteration += 1
             start_time = datetime.datetime.now()
 
-            for l in range(0, self.p):
-                ii = self.images[l]
+            for ii in self.images:
                 oi = np.dot(ii, self.weights)
                 ii_ = np.dot(oi, self.weights_)
 
@@ -131,10 +142,7 @@ class NeuralNetwork:
 
                 self.compute_weights(ii, oi, ii_, gamma, alpha, alpha_)
 
-            print self.weights[10, 10], self.weights_[10, 10]
-
-            for l in range(0, self.p):
-                ii = self.images[l]
+            for ii in self.images:
                 oi = np.dot(ii, self.weights)
                 ii_ = np.dot(oi, self.weights_)
 
@@ -142,9 +150,22 @@ class NeuralNetwork:
 
             delta_time = datetime.datetime.now() - start_time
 
-            print iteration, 'iteration, error =', e, 'took', delta_time.microseconds / 1000., 'ms'
+            if e < exp_min:
+                exp_min = e
+
+            print iteration, 'iteration, error =', e, 'exp_min =', exp_min, 'took', delta_time.microseconds / 1000., 'ms'
+
+        self.save_weights()
 
     def process(self):
-        self.training(self.images)
+        rec_images = []
 
-        exit(0)
+        for ii in self.images:
+            oi = np.dot(ii, self.weights)
+            ii_ = np.dot(oi, self.weights_)
+
+            rec_images.append(ii_)
+
+        return rec_images
+
+

@@ -1,5 +1,4 @@
 if __name__ == '__main__':
-    from compressor import Compressor
-
-    compressor = Compressor('images/image1.bmp', 5, 5, 75)
+    from Compressor import Compressor
+    compressor = Compressor('images/image1.bmp', 10, 10, 15, 10000)
     compressor.process()
