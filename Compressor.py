@@ -58,7 +58,8 @@ class Compressor:
     def recover_color(self, one_line_image):
         rec_color = np.empty(0, dtype=np.uint8)
         for value in one_line_image:
-            rec_color = np.append(rec_color, (value + 1) * 255 / 2)
+            cvalue = (value + 1) * 255 / 2
+            rec_color = np.append(rec_color, 255 if cvalue > 255 else 0 if cvalue < 0 else cvalue)
 
         return rec_color
 
@@ -90,7 +91,8 @@ class Compressor:
         inputs = self.prepare_images()
 
         network = NeuralNetwork(inputs, self.p, self.image_size, self.min_error)
-        network.training()
+        # network.training()
+        network.load_weights()
         rec_images = network.process()
 
         rec_picture = self.recover_image(rec_images)

@@ -99,7 +99,7 @@ class NeuralNetwork:
         :param size: int array size
         :return: float adaptive step
         """
-        s = 0
+        s = 1
 
         for i in xrange(size):
             s += x[i]**2
