@@ -13,6 +13,10 @@ class Compressor:
         self.image_size = self.wnd_width * self.wnd_height * self.channels
 
     def normalize_color(self, window):
+        """ This method normalize each channel value to [-1, 1]
+        :param window: array - picture block
+        :return: one input image
+        """
         image = np.ravel(window).astype(np.float64)
 
         for i in range(0, self.image_size):
@@ -37,6 +41,7 @@ class Compressor:
         return wnd_width, wnd_height
 
     def prepare_images(self):
+        """ Build array of input images """
         cols = self.width / self.wnd_width
         rows = self.height / self.wnd_height
         inputs = []
@@ -46,7 +51,7 @@ class Compressor:
             for j in range(0, rows):
                 y_pos = j * self.wnd_height
                 inputs.append(self.normalize_color(self.picture[x_pos: x_pos + self.wnd_width,
-                                                  y_pos: y_pos + self.wnd_height]))
+                                                                y_pos: y_pos + self.wnd_height]))
 
         return inputs
 
@@ -58,34 +63,23 @@ class Compressor:
         return rec_color
 
     def recover_window(self, line):
-        out = np.reshape(line, (-1, self.wnd_width, 3))
+        rec_color = self.recover_color(line)
+
+        out = np.reshape(rec_color, (-1, self.wnd_width, 3))
         return out
 
     def recover_image(self, rec_images):
-        big_array = np.empty(0, dtype=np.float64)
         rec_image = np.copy(self.picture)
-
-        for l in xrange(self.p):
-            if len(big_array) == 0:
-                big_array = rec_images[l]
-            else:
-                big_array = np.concatenate((big_array, rec_images[l]))
-
-        big_array = self.recover_color(big_array)
-
-        color_array = np.reshape(big_array, (-1, 3))
 
         cols = self.width / self.wnd_width
         rows = self.height / self.wnd_height
-
-        step = self.wnd_width * self.wnd_height
         c = 0
 
         for i in range(0, cols):
             x_pos = i * self.wnd_width
             for j in range(0, rows):
                 y_pos = j * self.wnd_height
-                window = self.recover_window(color_array[c * step: c * step + self.image_size / 3])
+                window = self.recover_window(rec_images[c])
                 rec_image[x_pos: x_pos + self.wnd_width,
                           y_pos: y_pos + self.wnd_height] = window
                 c += 1
