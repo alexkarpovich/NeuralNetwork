@@ -88,13 +88,20 @@ class Compressor:
         return rec_image
 
     def process(self):
+        print '[ Prepare input images ]'
         inputs = self.prepare_images()
 
+        print '[ Init Network ]'
         network = NeuralNetwork(inputs, self.p, self.image_size, self.min_error)
-        # network.training()
-        network.load_weights()
+
+        print '[ Start training]'
+        network.training()
+        # network.load_weights()
+
+        print '[ Start recovering picture ]'
         rec_images = network.process()
 
         rec_picture = self.recover_image(rec_images)
 
+        print '[ Save recoverd image to file ]'
         misc.imsave('images/rec_image.bmp', rec_picture)

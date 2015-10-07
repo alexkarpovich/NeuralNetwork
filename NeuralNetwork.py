@@ -136,8 +136,8 @@ class NeuralNetwork:
                 oi = np.dot(ii, self.weights)
                 ii_ = np.dot(oi, self.weights_)
 
-                alpha = self.compute_adaptive_step(ii, self.n)
-                alpha_ = self.compute_adaptive_step(oi, self.p)
+                alpha = 0.0001  # self.compute_adaptive_step(ii, self.n)
+                alpha_ = 0.0001  # self.compute_adaptive_step(oi, self.p)
                 gamma = self.compute_gamma(gamma, ii, ii_)
 
                 self.compute_weights(ii, oi, ii_, gamma, alpha, alpha_)
